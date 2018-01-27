@@ -2211,6 +2211,7 @@ class OperationPlan
         return;
       setupevent->erase();
       delete setupevent;
+      setupevent = nullptr;
     }
 
     /** Remove the setup event. */
@@ -2729,7 +2730,25 @@ class OperationPlan
     inline Item* getItem() const;
  };
 
+ 
+template <class type> bool TimeLine<type>::Event::operator < (const Event& fl2) const
+{
+  if (getDate() != fl2.getDate())
+    return getDate() < fl2.getDate();
+  else if (fabs(getQuantity() - fl2.getQuantity()) > ROUNDING_ERROR)
+	  return getQuantity() > fl2.getQuantity();
+  else
+  {
+	OperationPlan* op1 = getOperationPlan();
+	OperationPlan* op2 = fl2.getOperationPlan();
+	if (op1 && op2)
+	  return *op1 < *op2;
+	else
+	  return op1 == nullptr;
+  }
+}
 
+		
 /** @brief An operation represents an activity: these consume and produce material,
   * take time and also require capacity.
   *
@@ -6834,7 +6853,7 @@ class Resource : public HasHierarchy<Resource>,
     virtual void updateProblems();
 
     /** Update the setup time of all operationplans on the resource. */
-    void updateSetupTime(OperationPlan* = nullptr) const;
+    void updateSetupTime() const;
 
     void setHidden(bool b)
     {
